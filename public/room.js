@@ -89,22 +89,6 @@ window.hangup = () => {
   }
 }
 
-
-// jQuery document.ready equivalent
-window.ready = (callback) => {
-  if (document.readyState != 'loading') {
-    callback()
-  } else if (document.addEventListener) {
-    document.addEventListener('DOMContentLoaded', callback)
-  } else {
-    document.attachEvent('onreadystatechange', function () {
-      if (document.readyState != 'loading') {
-        callback()
-      }
-    })
-  }
-}
-
 window.muteSelf = () => {
   _currentRoom.audioMute(_currentRoom.member_id)
 }

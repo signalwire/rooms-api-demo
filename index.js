@@ -15,14 +15,23 @@ var cors = require('cors')
 app.use(cors());
 const axios = require('axios');
 
-const createClient = require('@signalwire/realtime-api').createClient;
+// SSE for alerts
+var SSE = require('express-sse');
+var sse = new SSE(['SignalWire SSE started']);
+app.get('/stream', (req, res, next) => {
+  res.flush = () => {}; 
+  next();
+}, sse.init);
 
+// SignalWire real time events
+const createClient = require('@signalwire/realtime-api').createClient;
 createClient({
   project: process.env.SIGNALWIRE_PROJECT_KEY,
   token: process.env.SIGNALWIRE_TOKEN
-}).then((client) => {
+}).then(async (client) => {
   client.video.on('room.started', async (roomSession) => {
-    console.log("Room started")
+    console.log("Room started", await roomSession.getMembers())
+    await sse.send("Room started");
   
     roomSession.on('member.joined', async (member) => {
       console.log('Joined', member.id, member.name)

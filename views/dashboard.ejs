@@ -12,4 +12,15 @@
       </p>
     </div>
   </div>
-<% }); %> 
+<% }); %>
+
+<script src="/utility.js"></script>
+
+<script>
+window.ready(function () {
+  var es = new EventSource('/stream');
+  es.onmessage = function (event) {
+    console.log('EVENT SENT', event);
+  };
+})
+</script>
