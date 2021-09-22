@@ -1,0 +1,15 @@
+<% rooms.forEach(function(room) { %>
+  <div class="card w-25 float-start">
+    <div class="card-body">
+      <h5 class="card-title"><%= room.display_name %></h5>
+      <ul class="list-group list-group-flush">
+        <% room.members.forEach(function(member) { %>
+          <li class="list-group-item"><%= member %></li>
+        <% }); %> 
+      </ul>
+      <p class="text-end">
+        <a href="/?room=<%= room.id %>" class="btn btn-primary btn-sm" target="_blank">Join</a>
+      </p>
+    </div>
+  </div>
+<% }); %> 
