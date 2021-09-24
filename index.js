@@ -15,42 +15,10 @@ var cors = require('cors')
 app.use(cors());
 const axios = require('axios');
 
-// SSE for alerts
-var SSE = require('express-sse');
-var sse = new SSE(['SignalWire SSE started']);
-app.get('/stream', (req, res, next) => {
-  res.flush = () => {}; 
-  next();
-}, sse.init);
-
-// SignalWire real time events
-const createClient = require('@signalwire/realtime-api').createClient;
-createClient({
-  project: process.env.SIGNALWIRE_PROJECT_KEY,
-  token: process.env.SIGNALWIRE_TOKEN
-}).then(async (client) => {
-  client.video.on('room.started', async (roomSession) => {
-    console.log("Room started", await roomSession.getMembers())
-    await sse.send("Room started");
-  
-    roomSession.on('member.joined', async (member) => {
-      console.log('Joined', member.id, member.name)
-    })
-
-    roomSession.on('member.left', async (member) => {
-      console.log('Left', member.id, member.name)
-    })
-  
-    await roomSession.subscribe()
-  });
-
-  client.connect()
-});
-
-
-
+// Utility methods
 async function apiRequest(path, data = {}, method = 'post') {
   var url = `https://${process.env.SIGNALWIRE_SPACE}${path}`
+  console.log(url)
   const res = await axios({
     method,
     url,
@@ -115,6 +83,46 @@ async function getActiveRooms() {
   return output;
 }
 
+// SSE for alerts
+var SSE = require('express-sse');
+var sse = new SSE(['SignalWire SSE started']);
+app.get('/stream', (req, res, next) => {
+  res.flush = () => {}; 
+  next();
+}, sse.init);
+
+async function sendEvent(payload) {
+  console.log(payload);
+  await sse.send(payload);
+}
+
+// SignalWire real time events
+const createClient = require('@signalwire/realtime-api').createClient;
+createClient({
+  project: process.env.SIGNALWIRE_PROJECT_KEY,
+  token: process.env.SIGNALWIRE_TOKEN
+}).then(async (client) => {
+  client.video.on('room.started', async (roomSession) => {
+    sendEvent(await getActiveRooms());
+  
+    roomSession.on('member.joined', async (member) => {
+      sendEvent(await getActiveRooms());
+    })
+
+    roomSession.on('member.left', async (member) => {
+      sendEvent(await getActiveRooms());
+    })
+  
+    await roomSession.subscribe()
+  });
+
+  client.video.on('room.ended', async (roomSession) => {
+    sendEvent(await getActiveRooms());
+  });
+
+  client.connect()
+});
+
 app.get('/', async (req, res) => {
   var room = req.query.room || `room${getRandomInt(1000)}`;
   var user = req.query.user || `user${getRandomInt(1000)}`;
@@ -124,7 +132,7 @@ app.get('/', async (req, res) => {
 
 app.get('/dashboard', async (req, res) => {
   var rooms = await getActiveRooms();
-  console.log(rooms);
+  console.log(rooms)
   res.render('dashboard', { rooms })
 });
 

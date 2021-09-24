@@ -1,26 +1,25 @@
-<% rooms.forEach(function(room) { %>
-  <div class="card w-25 float-start">
-    <div class="card-body">
-      <h5 class="card-title"><%= room.display_name %></h5>
-      <ul class="list-group list-group-flush">
-        <% room.members.forEach(function(member) { %>
-          <li class="list-group-item"><%= member %></li>
-        <% }); %> 
-      </ul>
-      <p class="text-end">
-        <a href="/?room=<%= room.id %>" class="btn btn-primary btn-sm" target="_blank">Join</a>
-      </p>
-    </div>
-  </div>
-<% }); %>
+<div id="root"></div>
 
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
 <script src="/utility.js"></script>
 
 <script>
-window.ready(function () {
-  var es = new EventSource('/stream');
-  es.onmessage = function (event) {
-    console.log('EVENT SENT', event);
-  };
-})
+  var _mainList = <%- JSON.stringify(rooms) %>;
+
+  window.ready(function () {
+
+    var es = new EventSource('/stream');
+    es.onmessage = function (event) {
+      const data = JSON.parse(event.data);
+      console.log(data);
+      if (Array.isArray(data)) {
+        RoomList.updateList(data);
+      }
+    };
+  })
+</script>
+
+<script type="text/babel" src="/dashboard.js">
 </script>
